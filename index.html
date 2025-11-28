@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jadwal Open Trip Canyoneering</title>
+<style>
+  :root{
+    --bg-dark:#111;
+    --card:#f2f2f2;
+    --brand:#ff5500;
+    --wa-green:#25D366;
+    --wa-dark:#128C7E;
+  }
+  html,body{height:100%; margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg-dark); color:#fff;}
+  .wrap{max-width:1000px; margin:0 auto; padding:18px; box-sizing:border-box;}
+
+  /* MAIN SECTION */
+  .section { background:var(--card); padding:20px; color:#111; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.25); }
+  h1.page-title{margin:0 0 12px 0; font-size:20px; text-align:center; color:#111;}
+  .controls { display:flex; gap:12px; justify-content:center; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  select#monthSelect{
+      padding:10px 12px; font-size:15px; border-radius:8px; border:2px solid var(--brand);
+      min-width:200px; background:white;
+  }
+  #loading { text-align:center; font-weight:600; color:var(--brand); margin-top:8px; }
+
+  .table-container{ overflow-x:auto; margin-top:12px; }
+  table{ width:100%; border-collapse:collapse; min-width:360px; background:#fff; color:#111; border-radius:6px; overflow:hidden; }
+  thead th{ background:var(--brand); color:#fff; padding:10px; text-align:center; font-size:14px; }
+  td, th{ border:1px solid #e6e6e6; padding:10px; font-size:14px; text-align:center; vertical-align:middle; }
+  .slot-tersisa{ display:inline-block; min-width:46px; padding:6px 10px; border-radius:6px; font-weight:700; color:#fff; }
+  .tersedia{ background:#28a745; }
+  .penuh{ background:#dc3545; }
+
+  /* DAFTAR button (WA style) */
+  .btn-daftar{
+    background: linear-gradient(180deg,var(--wa-green),var(--wa-dark));
+    color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;
+    font-weight:700; display:inline-flex; gap:8px; align-items:center; justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.18);
+    text-decoration:none;
+  }
+  .btn-daftar:active{ transform:translateY(1px); }
+  .btn-daftar svg{ display:block; }
+
+  /* Modal */
+  .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; }
+  .modal-backdrop.show{ display:flex; background:rgba(0,0,0,0.55); }
+  .modal{ width:94%; max-width:420px; background:#fff; color:#111; border-radius:10px; padding:14px; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+  .modal h3{ margin:0 0 8px 0; font-size:18px; }
+  .modal label{ display:block; font-size:13px; margin-top:8px; color:#333; }
+  .modal input[type="text"], .modal input[type="number"], .modal textarea{
+    width:100%; padding:10px; font-size:14px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;
+    margin-top:6px;
+  }
+  .modal .row{ display:flex; gap:8px; margin-top:12px; }
+  .modal .row .col{ flex:1; }
+  .modal .actions{ display:flex; gap:10px; margin-top:14px; justify-content:flex-end; }
+  .btn-cancel{ background:#fff; color:#333; border:1px solid #ccc; padding:8px 12px; border-radius:8px; cursor:pointer; }
+  .btn-send{ background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+
+  /* Floating WA (optional) */
+  .whatsapp-float {
+    position: fixed; right: 16px; bottom: 18px; width:56px; height:56px; border-radius:50%;
+    background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25); z-index:9998; text-decoration:none;
+  }
+  .whatsapp-float svg{ width:26px; height:26px; display:block; }
+  @media (max-width:480px){
+    .wrap{ padding:14px; }
+    h1.page-title{ font-size:18px; }
+    td, th{ padding:8px; font-size:13px; }
+    .btn-daftar{ padding:7px 10px; font-size:13px; border-radius:7px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="section" role="main" aria-labelledby="pageTitle">
+      <h1 id="pageTitle" class="page-title">Jadwal Open Trip TOS Canyoneering</h1>
+
+      <div class="controls" aria-hidden="false">
+        <label for="monthSelect" style="display:none;">Pilih Bulan</label>
+        <select id="monthSelect" aria-label="Pilih Bulan"></select>
+      </div>
+
+      <div id="loading">Mengambil data...</div>
+
+      <div class="table-container" aria-live="polite">
+        <table id="tripTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Slot Tersisa</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal small form untuk mengisi data pendaftaran -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3 id="modalTitle">Daftar Open Trip</h3>
+      <div id="selectedDateText" style="color:#444; font-size:14px; margin-bottom:6px;"></div>
+
+      <label for="inputName">Nama Lengkap</label>
+      <input id="inputName" type="text" placeholder="Masukkan nama lengkap" autocomplete="name" required />
+
+      <div class="row">
+        <div class="col">
+          <label for="inputQty">Jumlah Peserta</label>
+          <input id="inputQty" type="number" min="1" value="1" />
+        </div>
+        <div class="col">
+          <label for="inputPhone">No. HP (opsional)</label>
+          <input id="inputPhone" type="text" placeholder="08xxxx (opsional)" />
+        </div>
+      </div>
+
+      <label for="inputNote">Catatan (opsional)</label>
+      <textarea id="inputNote" rows="3" placeholder="Contoh: Sewa sepatu ukuran 42"></textarea>
+
+      <div class="actions">
+        <button class="btn-cancel" id="btnCancel">Batal</button>
+        <button class="btn-send" id="btnSend">Kirim via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp quick link (opsional) -->
+<!--   <a class="whatsapp-float" href="https://wa.me/62895400520827?text=Halo%20TOS%20Adventure%2C%20saya%20ingin%20info%20Open%20Trip" target="_blank" rel="noopener noreferrer" aria-label="Chat via WhatsApp" title="Chat via WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path fill="#25D366" d="M12 0C5.383 0 0 5.383 0 12c0 2.115.55 4.154 1.596 5.96L0 24l6.354-1.633A11.94 11.94 0 0012 24c6.627 0 12-5.383 12-12S18.627 0 12 0z"/>
+      <path fill="#FFF" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+    </svg>
+  </a> -->
+
+<script>
+/* CONFIG */
+const apiURL = "https://script.google.com/macros/s/AKfycbwoQKn-H3UjntAj1onCpgsOFN1PPM3b71xAB1iS9ROfDmwKyL9gVg89MX8S8uTj_N3x/exec";
+const MAX_SLOT = 15;
+const WA_NUMBER = "62895400520827"; // internasional format
+
+/* STATE */
+let sheetsData = [];
+let currentSelectedDateISO = null;
+
+/* ELEMENTS */
+const monthSelect = document.getElementById("monthSelect");
+const loadingEl = document.getElementById("loading");
+const tripTable = document.getElementById("tripTable");
+const tableBody = document.getElementById("tableBody");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const selectedDateText = document.getElementById("selectedDateText");
+const inputName = document.getElementById("inputName");
+const inputQty = document.getElementById("inputQty");
+const inputPhone = document.getElementById("inputPhone");
+const inputNote = document.getElementById("inputNote");
+const btnCancel = document.getElementById("btnCancel");
+const btnSend = document.getElementById("btnSend");
+
+/* LOAD DATA */
+async function loadData(){
+  try{
+    const res = await fetch(apiURL);
+    const json = await res.json();
+    sheetsData = json;
+
+    // populate months
+    monthSelect.innerHTML = "";
+    json.forEach((sheet, idx) => {
+      const opt = document.createElement("option");
+      opt.value = sheet.sheetName;
+      opt.textContent = sheet.sheetName;
+      monthSelect.appendChild(opt);
+    });
+
+    if(monthSelect.options.length > 0){
+      displayMonth(monthSelect.value);
+    }
+
+    monthSelect.addEventListener("change", e => displayMonth(e.target.value));
+
+    loadingEl.style.display = "none";
+    tripTable.style.display = "table";
+  }catch(err){
+    loadingEl.innerText = "Gagal mengambil data!";
+    console.error(err);
+  }
+}
+
+/* DISPLAY MONTH */
+function displayMonth(sheetName){
+  tableBody.innerHTML = "";
+  const sheet = sheetsData.find(s => s.sheetName === sheetName);
+  if(!sheet) return;
+
+  sheet.data.forEach(row=>{
+    // row expected: [tanggalISO, jumlahFix]
+    if(row.length === 2 && row[0] && typeof row[1] === "number"){
+      const tanggalISO = row[0];
+      const jumlahFix = row[1];
+      const slotTersisa = Math.max(0, MAX_SLOT - jumlahFix);
+      const tanggalText = new Date(tanggalISO).toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
+
+      const tr = document.createElement("tr");
+
+      const tdDate = document.createElement("td");
+      tdDate.textContent = tanggalText;
+
+      const tdSlot = document.createElement("td");
+      const span = document.createElement("span");
+      span.className = "slot-tersisa " + (slotTersisa>0 ? "tersedia" : "penuh");
+      span.textContent = slotTersisa === 0 ? "FULL" : slotTersisa;
+      tdSlot.appendChild(span);
+
+      const tdAction = document.createElement("td");
+      if(slotTersisa > 0){
+        // create DAFTAR button
+        const btn = document.createElement("button");
+        btn.className = "btn-daftar";
+        btn.type = "button";
+        btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" style="display:block;">
+            <path fill="#fff" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+          </svg> <span style="line-height:1;">DAFTAR</span>`;
+
+        // attach click handler to open modal form
+        btn.addEventListener("click", ()=> openRegistrationModal(tanggalISO, tanggalText));
+
+        tdAction.appendChild(btn);
+      } else {
+        tdAction.textContent = "-";
+      }
+
+      tr.appendChild(tdDate);
+      tr.appendChild(tdSlot);
+      tr.appendChild(tdAction);
+
+      tableBody.appendChild(tr);
+    }
+  });
+}
+
+/* OPEN MODAL */
+function openRegistrationModal(tanggalISO, tanggalText){
+  currentSelectedDateISO = tanggalISO;
+  selectedDateText.textContent = `Tanggal: ${tanggalText}`;
+  inputName.value = "";
+  inputQty.value = 1;
+  inputPhone.value = "";
+  inputNote.value = "";
+  modalBackdrop.classList.add("show");
+  modalBackdrop.setAttribute("aria-hidden","false");
+  // focus first input
+  setTimeout(()=> inputName.focus(), 120);
+}
+
+/* CLOSE MODAL */
+function closeModal(){
+  modalBackdrop.classList.remove("show");
+  modalBackdrop.setAttribute("aria-hidden","true");
+}
+
+/* BUILD WA MESSAGE & OPEN */
+function sendWhatsApp(){
+  const name = inputName.value.trim();
+  const qty = parseInt(inputQty.value, 10) || 1;
+  const phone = inputPhone.value.trim();
+  const note = inputNote.value.trim();
+  if(!name){
+    alert("Tolong masukkan nama lengkap.");
+    inputName.focus();
+    return;
+  }
+  // format date text
+  const tanggalText = new Date(currentSelectedDateISO).toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
+
+  let message = `Halo TOS Adventure, saya ingin daftar Open Trip Canyoneering tanggal ${tanggalText}.\nNama: ${name}\nJumlah peserta: ${qty}`;
+  if(phone) message += `\nNo HP: ${phone}`;
+  if(note) message += `\nCatatan: ${note}`;
+  message += `\n\nMohon konfirmasi ya. Terima kasih.`;
+
+  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+  // open in new tab
+  window.open(url, "_blank");
+  closeModal();
+}
+
+/* EVENT LISTENERS */
+btnCancel.addEventListener("click", closeModal);
+btnSend.addEventListener("click", sendWhatsApp);
+// close modal when clicking outside modal content
+modalBackdrop.addEventListener("click", (e)=>{
+  if(e.target === modalBackdrop) closeModal();
+});
+
+// keyboard ESC to close
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && modalBackdrop.classList.contains("show")) closeModal();
+});
+
+/* INIT */
+loadData();
+</script>
+</body>
+</html>
