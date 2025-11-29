@@ -250,8 +250,9 @@ function displayMonth(sheetName){
       const jumlahFix = row[1];
       const slotTersisa = Math.max(0, MAX_SLOT - jumlahFix);
       const tanggalText = dateObj.toLocaleDateString("id-ID", {
-        year:"numeric", month:"long", day:"numeric"
-      });
+  weekday:"long", year:"numeric", month:"long", day:"numeric"
+}).replace(/^\w/, c => c.toUpperCase());
+
 
       const tr = document.createElement("tr");
 
