@@ -12,6 +12,12 @@
     --wa-green:#25D366;
     --wa-dark:#128C7E;
   }
+    .libur{ background:#6c757d; } /* label abu-abu untuk LIBUR (Jumat) */
+  .btn-disabled{
+    background:#e9ecef; color:#6c757d; border:1px solid #ddd; cursor:not-allowed;
+    padding:8px 12px; border-radius:8px; font-weight:700; display:inline-flex; gap:8px; align-items:center;
+  }
+
   html,body{height:100%; margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg-dark); color:#fff;}
   .wrap{max-width:1000px; margin:0 auto; padding:18px; box-sizing:border-box;}
 
@@ -88,6 +94,9 @@
       <div id="loading">Mengambil data...</div>
 
       <div class="table-container" aria-live="polite">
+        <div id="jadwal-wrapper">
+  <table id="jadwal-table">
+
         <table id="tripTable" style="display:none;">
           <thead>
             <tr>
@@ -165,34 +174,61 @@ const btnCancel = document.getElementById("btnCancel");
 const btnSend = document.getElementById("btnSend");
 
 /* LOAD DATA */
-async function loadData(){
-  try{
-    const res = await fetch(apiURL);
+/* CONFIG CACHE */
+const CACHE_KEY = "tripDataCache";
+const CACHE_TIME = 30 * 60 * 1000; // 30 menit
+
+async function loadData() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const now = Date.now();
+
+      if (now - parsed.timestamp < CACHE_TIME) {
+        sheetsData = parsed.data;
+        populateMonthsAndDisplay();
+        console.log("✔ Menggunakan cache");
+        return;
+      }
+    }
+
+    console.log("↻ Mengambil data dari API...");
+    const res = await fetch(apiURL, { cache: "no-store" });
     const json = await res.json();
     sheetsData = json;
 
-    // populate months
-    monthSelect.innerHTML = "";
-    json.forEach((sheet, idx) => {
-      const opt = document.createElement("option");
-      opt.value = sheet.sheetName;
-      opt.textContent = sheet.sheetName;
-      monthSelect.appendChild(opt);
-    });
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ timestamp: Date.now(), data: json })
+    );
 
-    if(monthSelect.options.length > 0){
-      displayMonth(monthSelect.value);
-    }
 
-    monthSelect.addEventListener("change", e => displayMonth(e.target.value));
-
-    loadingEl.style.display = "none";
-    tripTable.style.display = "table";
-  }catch(err){
+    populateMonthsAndDisplay();
+  } catch (err) {
     loadingEl.innerText = "Gagal mengambil data!";
     console.error(err);
   }
 }
+
+function populateMonthsAndDisplay() {
+  monthSelect.innerHTML = "";
+  sheetsData.forEach(sheet => {
+    const opt = document.createElement("option");
+    opt.value = sheet.sheetName;
+    opt.textContent = sheet.sheetName;
+    monthSelect.appendChild(opt);
+  });
+
+  if (monthSelect.options.length > 0) {
+    displayMonth(monthSelect.value);
+  }
+
+  loadingEl.style.display = "none";
+  tripTable.style.display = "table";
+  monthSelect.addEventListener("change", e => displayMonth(e.target.value));
+}
+
 
 /* DISPLAY MONTH */
 function displayMonth(sheetName){
@@ -200,13 +236,22 @@ function displayMonth(sheetName){
   const sheet = sheetsData.find(s => s.sheetName === sheetName);
   if(!sheet) return;
 
-  sheet.data.forEach(row=>{
-    // row expected: [tanggalISO, jumlahFix]
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  sheet.data.forEach(row => {
     if(row.length === 2 && row[0] && typeof row[1] === "number"){
       const tanggalISO = row[0];
+      const dateObj = new Date(tanggalISO);
+
+      // Skip data yang sudah lewat
+      if(dateObj < today) return;
+
       const jumlahFix = row[1];
       const slotTersisa = Math.max(0, MAX_SLOT - jumlahFix);
-      const tanggalText = new Date(tanggalISO).toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
+      const tanggalText = dateObj.toLocaleDateString("id-ID", {
+        year:"numeric", month:"long", day:"numeric"
+      });
 
       const tr = document.createElement("tr");
 
@@ -215,36 +260,60 @@ function displayMonth(sheetName){
 
       const tdSlot = document.createElement("td");
       const span = document.createElement("span");
-      span.className = "slot-tersisa " + (slotTersisa>0 ? "tersedia" : "penuh");
-      span.textContent = slotTersisa === 0 ? "FULL" : slotTersisa;
+
+      // Jika hari Jumat -> lock (libur)
+      const isFriday = dateObj.getDay() === 5; // 5 = Friday
+      if(isFriday){
+        span.className = "slot-tersisa libur";
+        span.textContent = "LIBUR";
+      } else {
+        span.className = "slot-tersisa " + (slotTersisa>0 ? "tersedia" : "penuh");
+        span.textContent = slotTersisa === 0 ? "FULL" : slotTersisa;
+      }
       tdSlot.appendChild(span);
 
       const tdAction = document.createElement("td");
-      if(slotTersisa > 0){
-        // create DAFTAR button
-        const btn = document.createElement("button");
-        btn.className = "btn-daftar";
-        btn.type = "button";
-        btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" style="display:block;">
-            <path fill="#fff" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
-          </svg> <span style="line-height:1;">DAFTAR</span>`;
-
-        // attach click handler to open modal form
-        btn.addEventListener("click", ()=> openRegistrationModal(tanggalISO, tanggalText));
-
-        tdAction.appendChild(btn);
-      } else {
+      if(isFriday){
+        // Jika Jumat: tidak boleh daftar — tampilkan tanda hubung dengan tooltip
         tdAction.textContent = "-";
+        tdAction.title = "Operasional libur setiap hari Jumat — pendaftaran ditutup.";
+        tdAction.setAttribute("aria-label", "Libur hari Jumat — pendaftaran ditutup");
+      } else {
+        if(slotTersisa > 0){
+          const btn = document.createElement("button");
+          btn.className = "btn-daftar";
+          btn.type = "button";
+          btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" style="display:block;">
+              <path fill="#fff" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+            </svg> <span style="line-height:1;">DAFTAR</span>`;
+          btn.addEventListener("click", ()=> openRegistrationModal(tanggalISO, tanggalText));
+          tdAction.appendChild(btn);
+        } else {
+          tdAction.textContent = "-";
+        }
       }
 
       tr.appendChild(tdDate);
       tr.appendChild(tdSlot);
       tr.appendChild(tdAction);
-
       tableBody.appendChild(tr);
     }
   });
+
+  // Jika semua tanggal habis / terhapus
+  if(tableBody.children.length === 0){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.style.padding = "18px";
+    td.style.fontWeight = "600";
+    td.textContent = "Tidak ada jadwal tersedia.";
+    tr.appendChild(td);
+    tableBody.appendChild(tr);
+  }
 }
+
+
 
 /* OPEN MODAL */
 function openRegistrationModal(tanggalISO, tanggalText){
