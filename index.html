@@ -66,7 +66,7 @@
   .btn-cancel{ background:#fff; color:#333; border:1px solid #ccc; padding:8px 12px; border-radius:8px; cursor:pointer; }
   .btn-send{ background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
 
-  /* Floating WA (optional) */
+  /* Floating WA (opsional) */
   .whatsapp-float {
     position: fixed; right: 16px; bottom: 18px; width:56px; height:56px; border-radius:50%;
     background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); display:flex; align-items:center; justify-content:center;
@@ -141,17 +141,10 @@
     </div>
   </div>
 
-  <!-- Floating WhatsApp quick link (opsional) -->
-<!--   <a class="whatsapp-float" href="https://wa.me/62895400520827?text=Halo%20TOS%20Adventure%2C%20saya%20ingin%20info%20Open%20Trip" target="_blank" rel="noopener noreferrer" aria-label="Chat via WhatsApp" title="Chat via WhatsApp">
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path fill="#25D366" d="M12 0C5.383 0 0 5.383 0 12c0 2.115.55 4.154 1.596 5.96L0 24l6.354-1.633A11.94 11.94 0 0012 24c6.627 0 12-5.383 12-12S18.627 0 12 0z"/>
-      <path fill="#FFF" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
-    </svg>
-  </a> -->
-
 <script>
 /* CONFIG */
 const apiURL = "https://script.google.com/macros/s/AKfycbwoQKn-H3UjntAj1onCpgsOFN1PPM3b71xAB1iS9ROfDmwKyL9gVg89MX8S8uTj_N3x/exec";
+const saveURL = "https://script.google.com/macros/s/AKfycbywQBG9xMDjRshEg07HFuGDuHwyTIKHRJEmXSbxEqj8OU1PJIYnWUi63v72h14TaxzL/exec";
 const MAX_SLOT = 15;
 const WA_NUMBER = "62895400520827"; // internasional format
 
@@ -275,7 +268,6 @@ function displayMonth(sheetName){
 
       const tdAction = document.createElement("td");
       if(isFriday){
-        // Jika Jumat: tidak boleh daftar — tampilkan tanda hubung dengan tooltip
         tdAction.textContent = "-";
         tdAction.title = "Operasional libur setiap hari Jumat — pendaftaran ditutup.";
         tdAction.setAttribute("aria-label", "Libur hari Jumat — pendaftaran ditutup");
@@ -285,7 +277,7 @@ function displayMonth(sheetName){
           btn.className = "btn-daftar";
           btn.type = "button";
           btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" style="display:block;">
-              <path fill="#fff" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.51l-.57-.01c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709.306 1.26.489 1.69.625.71.226 1.357.194 1.87.118.57-.085 1.758-.718 2.007-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+              <path fill="#fff" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.472-.149-.67.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.298-.018-.459.130-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.209-.242-.579-.487-.5-.67-.510l-.57-.010c-.198 0-.521.075-.793.372-.272.298-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.199 2.095 3.2 5.076 4.487.709(.306) 1.26(.489) 1.69(.625) 0(.226 1.357 .194 1.87 .118 .57-.085 1.758-.718 2.007-1.413.248-.695 .248-1.29 .173-1.414-.074-.124-.272-.198-.57-.347z"/>
             </svg> <span style="line-height:1;">DAFTAR</span>`;
           btn.addEventListener("click", ()=> openRegistrationModal(tanggalISO, tanggalText));
           tdAction.appendChild(btn);
@@ -301,7 +293,6 @@ function displayMonth(sheetName){
     }
   });
 
-  // Jika semua tanggal habis / terhapus
   if(tableBody.children.length === 0){
     const tr = document.createElement("tr");
     const td = document.createElement("td");
@@ -315,8 +306,6 @@ function displayMonth(sheetName){
 }
 
 
-
-/* OPEN MODAL */
 function openRegistrationModal(tanggalISO, tanggalText){
   currentSelectedDateISO = tanggalISO;
   selectedDateText.textContent = `Tanggal: ${tanggalText}`;
@@ -326,50 +315,77 @@ function openRegistrationModal(tanggalISO, tanggalText){
   inputNote.value = "";
   modalBackdrop.classList.add("show");
   modalBackdrop.setAttribute("aria-hidden","false");
-  // focus first input
   setTimeout(()=> inputName.focus(), 120);
 }
 
-/* CLOSE MODAL */
 function closeModal(){
   modalBackdrop.classList.remove("show");
   modalBackdrop.setAttribute("aria-hidden","true");
 }
 
-/* BUILD WA MESSAGE & OPEN */
 function sendWhatsApp(){
   const name = inputName.value.trim();
   const qty = parseInt(inputQty.value, 10) || 1;
   const phone = inputPhone.value.trim();
   const note = inputNote.value.trim();
+
   if(!name){
     alert("Tolong masukkan nama lengkap.");
     inputName.focus();
     return;
   }
-  // format date text
-  const tanggalText = new Date(currentSelectedDateISO).toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
 
+  const tripDate = new Date(currentSelectedDateISO);
+  const tanggalText = tripDate.toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
+  const bulanText = tripDate.toLocaleDateString("id-ID", { month:"long", year:"numeric" });
+
+  // Siapkan pesan WA dan buka jendela baru dulu (langsung dari click -> menghindari popup blocker)
   let message = `Halo TOS Adventure, saya ingin daftar Open Trip Canyoneering tanggal ${tanggalText}.\nNama: ${name}\nJumlah peserta: ${qty}`;
   if(phone) message += `\nNo HP: ${phone}`;
   if(note) message += `\nCatatan: ${note}`;
   message += `\n\nMohon konfirmasi ya. Terima kasih.`;
 
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
-  // open in new tab
-  window.open(url, "_blank");
+  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+
+  // Buka WA dulu (synchronous, langsung dari event click)
+  const newWin = window.open(waUrl, "_blank");
+
+  // Siapkan payload untuk Google Sheets
+  const payload = {
+    nama: name,
+    nohp: phone,
+    jumlah: qty,
+    tanggal: tanggalText,
+    bulan: bulanText,
+    catatan: note
+  };
+
+  // Kirim ke Google Sheets secara "fire-and-forget" — jangan await supaya tidak memblok popup
+  fetch(saveURL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  }).catch(err => {
+    // Opsional: bisa beri notifikasi kecil atau console.warn
+    console.warn("Gagal menyimpan ke spreadsheet:", err);
+    // Jika mau, buka tab error info di window baru yang sama (tidak disarankan)
+  });
+
+  // Tutup modal
   closeModal();
+
+  // Jika browser memblokir popup (newWin === null), fallback: navigasi di tab yang sama
+  if (!newWin) {
+    // fallback ke same-tab
+    window.location.href = waUrl;
+  }
 }
 
-/* EVENT LISTENERS */
+
 btnCancel.addEventListener("click", closeModal);
 btnSend.addEventListener("click", sendWhatsApp);
-// close modal when clicking outside modal content
 modalBackdrop.addEventListener("click", (e)=>{
   if(e.target === modalBackdrop) closeModal();
 });
-
-// keyboard ESC to close
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && modalBackdrop.classList.contains("show")) closeModal();
 });
