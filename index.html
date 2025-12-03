@@ -90,8 +90,9 @@
 }
 /* TURUNKAN AREA JADWAL SEDIKIT */
 .poster .grid {
-  margin-top: 30px !important;  /* semula 12px, jadi turun */
+  margin-top: 20px !important; /* bebas: 60–200px */
 }
+
 
 
    .poster .grid {
@@ -179,18 +180,44 @@
 
 
   .poster .footer {
-  width:100%;
-  text-align:center;
-  padding-bottom:70px;      /* tambah ruang bawah */
-  margin-top:200px;          /* beri jarak dari jadwal */
-  display:flex;
-  flex-direction:column;
-  gap:10px;                 /* jarak antar baris */
-  align-items:center;
-  font-size:32px;           /* ukuran ideal poster */
-  line-height:1.3;
-  box-sizing:border-box;
+  width: 100%;
+  text-align: center;
+  padding-bottom: 40px;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  font-size: 22px;
+  line-height: 1.3;
+  color: #fff;
 }
+
+.poster .footer .brand-footer {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.poster .footer-sosmed {
+  display: flex;
+  gap: 26px;
+  font-size: 20px;
+}
+
+.poster .footer-sosmed .sosmed-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.poster .footer-sosmed .icon-svg {
+  width: 22px;
+  height: 22px;
+  fill: white;     /* ikon putih untuk poster gelap */
+}
+
 
 
   @media (max-width:480px){
@@ -208,6 +235,56 @@
     position:relative;
     transform:none !important; /* pastikan tidak ter-scale */
   }
+
+  #exportPoster .ketentuan-box {
+    margin-top: 25px;
+    padding: 18px 20px;
+    background: rgba(0,0,0,0.55);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+#exportPoster .ketentuan-box h3 {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 800;
+}
+
+#exportPoster .ketentuan-box .list {
+    padding-left: 18px;
+    margin-bottom: 12px;
+}
+
+#exportPoster .ketentuan-box .list li {
+    margin-bottom: 4px;
+}
+
+#exportPoster .ketentuan-box h4 {
+    font-size: 20px;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+#exportPoster .ketentuan-box .pembayaran p {
+    margin-bottom: 10px;
+}
+
+#exportPoster .ketentuan-box .info {
+    font-size: 17px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+#exportPoster .ketentuan-box .closing {
+    font-size: 18px;
+    text-align: center;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
 
   /* Matikan transform/zoom saat export */
   .exporting .export-area, .exporting .export-area * {
@@ -238,7 +315,7 @@
 }
 
 .poster-title h3 {
-  margin:0;           /* CANYONEERING SCHEDULE menempel ke H2 */
+  margin:30;           /* CANYONEERING SCHEDULE menempel ke H2 */
   font-size:58px;     /* tetap besar */
   line-height:1.1;    /* lebih rapat */
 }
@@ -250,7 +327,17 @@
 }
 
 
+
 </style>
+<!-- Import Montserrat -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+#exportPoster * {
+    font-family: 'Montserrat', sans-serif !important;
+}
+</style>
+
 </head>
 <body>
   <div class="wrap">
@@ -431,10 +518,11 @@ function displayMonth(sheetName){
 
       // Jika hari Jumat -> lock (libur)
       const isFriday = dateObj.getDay() === 5; // 5 = Friday
-      if(isFriday){
-        span.className = "slot-tersisa libur";
-        span.textContent = "LIBUR";
-      } else {
+      // Skip hari Jumat → tidak ditampilkan di tabel sama sekali
+      if(dateObj.getDay() === 5){
+          return;
+      }
+       else {
         span.className = "slot-tersisa " + (slotTersisa>0 ? "tersedia" : "penuh");
         span.textContent = slotTersisa === 0 ? "FULL" : slotTersisa;
       }
@@ -620,9 +708,35 @@ function buildPosterHTML(sheetName){
           ${right.map(rowToHTML).join("\n")}
         </div>
       </div>
+      <div class="ketentuan-box">
+  <h3>Syarat & Ketentuan</h3>
 
-      <div class="footer">TOS Rafting Pacet - Canyoneering Pacet</div>
-    </div>
+  <ul class="list">
+    <li>Minimal keberangkatan <b>5 peserta</b>.</li>
+    <li>Bisa join open trip jika kurang dari 5 orang.</li>
+    <li>Konfirmasi peserta / reschedule maksimal <b>H-1</b>.</li>
+    <li>Pembatalan hari-H → <b>DP hangus</b>.</li>
+  </ul>
+
+  <h4>Pembayaran DP</h4>
+  <p>
+    BCA – <b>6140846421</b><br>
+    A.n. <b>Muhammad Fatichul Ichsan</b>
+  </p>
+</div>
+
+
+
+    <div class="footer">
+   <div class="brand-footer">TOS Rafting Pacet – Canyoneering Pacet</div>
+
+   <div class="footer-sosmed">
+      <div class="sosmed-item"><span class="icon">📷</span> @tosraftingadventure</div>
+      <div class="sosmed-item"><span class="icon">🎵</span> @tosraftingpacet</div>
+      <div class="sosmed-item"><span class="icon">🌐</span> wisataraftingpacet.com</div>
+   </div>
+</div>
+
   `;
   return poster;
 }
@@ -691,6 +805,7 @@ btnExport.addEventListener("click", exportPoster);
 /* INIT */
 loadData();
 </script>
+
+
 </body>
 </html>
-
