@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Jadwal Open Trip Canyoneering</title>
+<title>Jadwal Open Trip Canyoneering Pacet</title>
+
 <style>
   :root{
     --bg-dark:#111;
     --card:#f2f2f2;
-    --brand:#ff5500;
+    --brand:#ff5500; /* oranye brand */
     --wa-green:#25D366;
     --wa-dark:#128C7E;
-  }
-    .libur{ background:#6c757d; } /* label abu-abu untuk LIBUR (Jumat) */
-  .btn-disabled{
-    background:#e9ecef; color:#6c757d; border:1px solid #ddd; cursor:not-allowed;
-    padding:8px 12px; border-radius:8px; font-weight:700; display:inline-flex; gap:8px; align-items:center;
+    --poster-width:1080px;
+    --poster-height:1920px;
   }
 
   html,body{height:100%; margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg-dark); color:#fff;}
@@ -25,10 +23,7 @@
   .section { background:var(--card); padding:20px; color:#111; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.25); }
   h1.page-title{margin:0 0 12px 0; font-size:20px; text-align:center; color:#111;}
   .controls { display:flex; gap:12px; justify-content:center; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-  select#monthSelect{
-      padding:10px 12px; font-size:15px; border-radius:8px; border:2px solid var(--brand);
-      min-width:200px; background:white;
-  }
+  select#monthSelect{ padding:10px 12px; font-size:15px; border-radius:8px; border:2px solid var(--brand); min-width:200px; background:white; }
   #loading { text-align:center; font-weight:600; color:var(--brand); margin-top:8px; }
 
   .table-container{ overflow-x:auto; margin-top:12px; }
@@ -39,83 +34,267 @@
   .tersedia{ background:#28a745; }
   .penuh{ background:#dc3545; }
 
-  /* DAFTAR button (WA style) */
-  .btn-daftar{
-    background: linear-gradient(180deg,var(--wa-green),var(--wa-dark));
-    color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;
-    font-weight:700; display:inline-flex; gap:8px; align-items:center; justify-content:center;
-    box-shadow:0 6px 18px rgba(0,0,0,0.18);
-    text-decoration:none;
-  }
+  .btn-daftar{ background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; display:inline-flex; gap:8px; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.18); text-decoration:none; }
   .btn-daftar:active{ transform:translateY(1px); }
-  .btn-daftar svg{ display:block; }
 
-  /* Modal */
   .modal-backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; }
   .modal-backdrop.show{ display:flex; background:rgba(0,0,0,0.55); }
   .modal{ width:94%; max-width:420px; background:#fff; color:#111; border-radius:10px; padding:14px; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
   .modal h3{ margin:0 0 8px 0; font-size:18px; }
   .modal label{ display:block; font-size:13px; margin-top:8px; color:#333; }
-  .modal input[type="text"], .modal input[type="number"], .modal textarea{
-    width:100%; padding:10px; font-size:14px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;
-    margin-top:6px;
-  }
+  .modal input[type="text"], .modal input[type="number"], .modal textarea{ width:100%; padding:10px; font-size:14px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; margin-top:6px; }
   .modal .row{ display:flex; gap:8px; margin-top:12px; }
   .modal .row .col{ flex:1; }
   .modal .actions{ display:flex; gap:10px; margin-top:14px; justify-content:flex-end; }
   .btn-cancel{ background:#fff; color:#333; border:1px solid #ccc; padding:8px 12px; border-radius:8px; cursor:pointer; }
   .btn-send{ background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
 
-  /* Floating WA (opsional) */
-  .whatsapp-float {
-    position: fixed; right: 16px; bottom: 18px; width:56px; height:56px; border-radius:50%;
-    background: linear-gradient(180deg,var(--wa-green),var(--wa-dark)); display:flex; align-items:center; justify-content:center;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25); z-index:9998; text-decoration:none;
+  /* ---------------------------
+     POSTER LAYOUT (untuk export)
+     --------------------------- */
+  #exportPoster { display:none; } /* kept hidden in normal UI */
+
+  /* fixed poster container */
+  .poster {
+  width:1080px;
+  height:1920px;
+  margin:0 auto;
+  box-sizing:border-box;
+  padding:80px 90px;
+  position: relative;
+  font-family: "Poppins", Arial, sans-serif;
+  color:#fff;
+  overflow:hidden;
+
+  /* Background foto + overlay gelap */
+  background:
+      linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+      url('canyoning.jpg') center/cover no-repeat;
+}
+
   }
-  .whatsapp-float svg{ width:26px; height:26px; display:block; }
+  .poster .logo { width:220px; margin:0 auto 24px auto; text-align:center; font-weight:700; color:var(--brand); font-size:20px; letter-spacing:1px;}
+  .poster h2 {
+  font-size: 84px;     /* sebelumnya sekitar 58–64px */
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+  .poster h3 {
+  font-size: 48px;     /* naikkan untuk proporsional */
+  font-weight: 600;
+  margin-top: -10px;
+  letter-spacing: 1px;
+}
+/* TURUNKAN AREA JADWAL SEDIKIT */
+.poster .grid {
+  margin-top: 30px !important;  /* semula 12px, jadi turun */
+}
+
+
+   .poster .grid {
+  display: grid;
+  grid-template-columns: 1fr 12px 1fr; /* tetap 2 kolom + divider */
+  gap: 24px;
+  align-items: start;
+  margin-top: 12px;
+  height: auto; /* jangan pakai height paksa */
+}
+
+/* Tanggal dalam setiap kolom vertikal dulu */
+.col-left,
+.col-right {
+  column-count: 1;    /* default 1 kolom */
+  display: block;
+}
+
+/* Jika mau isi panjang, ubah jadi multi kolom per sisi */
+.col-left,
+.col-right {
+  column-count: 1;        /* ubah ke angka sesuai kebutuhan */
+  column-gap: 12px;
+}
+
+.date-item {
+  break-inside: avoid;
+  margin-bottom: 6px;
+  display: block;
+}
+
+  .poster .col-left, .poster .col-right{
+    padding: 12px 6px;
+    overflow:hidden;
+  }
+  .poster .divider {
+    background: rgba(255,255,255,0.12);
+    width:12px;
+    justify-self:center;
+    height:100%;
+    border-radius:6px;
+  }
+  .item-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding: 10px 8px;
+  }
+  .item-date {
+    border:2px solid rgba(255,255,255,0.18);
+    padding:10px 14px;
+    border-radius:12px;
+    min-width:180px;
+    text-align:center;
+    font-weight:700;
+    font-size:18px;
+    color:#fff;
+    background:rgba(0,0,0,0.25);
+  }
+  .item-slot {
+    min-width:220px;
+    text-align:center;
+  }
+  .pill {
+    display:inline-block;
+    padding:12px 22px;
+    border-radius:22px;
+    font-weight:800;
+    font-size:18px;
+    background:var(--brand); /* oranye brand untuk semua pill */
+    color:#fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  }
+  .pill.full { 
+    background: var(--brand);
+    color:#fff;
+    border:none;
+  }
+
+  .pill.libur {
+    background: var(--brand);
+    color:#fff;
+  }
+
+
+  .poster .footer {
+  width:100%;
+  text-align:center;
+  padding-bottom:70px;      /* tambah ruang bawah */
+  margin-top:200px;          /* beri jarak dari jadwal */
+  display:flex;
+  flex-direction:column;
+  gap:10px;                 /* jarak antar baris */
+  align-items:center;
+  font-size:32px;           /* ukuran ideal poster */
+  line-height:1.3;
+  box-sizing:border-box;
+}
+
+
   @media (max-width:480px){
     .wrap{ padding:14px; }
     h1.page-title{ font-size:18px; }
     td, th{ padding:8px; font-size:13px; }
-    .btn-daftar{ padding:7px 10px; font-size:13px; border-radius:7px; }
   }
+
+  /* Pastikan area export tidak keluar layar */
+  .export-area {
+    width:1080px;        /* ukuran poster */
+    max-width:1080px;
+    margin:0 auto;       /* wajib agar tidak geser kanan */
+    overflow:hidden;     /* cegah potongan kanan */
+    position:relative;
+    transform:none !important; /* pastikan tidak ter-scale */
+  }
+
+  /* Matikan transform/zoom saat export */
+  .exporting .export-area, .exporting .export-area * {
+    transform:none !important;
+    zoom:unset !important;
+  }
+
+  /* small helpers */
+  .hide-on-export { }
+  .exporting .hide-on-export { display:none !important; }
+
+  .poster-logo {
+  width: 320px; /* ukuran pas dengan proporsi logo Anda */
+  margin: 0px auto 25px;
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
+}
+.poster-title {
+  text-align: center;
+}
+.poster-logo {
+  width:200px;        /* ukuran sudah kecil */
+  margin:10px auto 10px; /* jarak atas & bawah lebih dekat */
+}
+
+.poster-title h2 {
+  margin:5px 0 0;     /* OPEN TRIP lebih dekat ke logo */
+}
+
+.poster-title h3 {
+  margin:0;           /* CANYONEERING SCHEDULE menempel ke H2 */
+  font-size:58px;     /* tetap besar */
+  line-height:1.1;    /* lebih rapat */
+}
+.poster-title h4 {
+  margin-top:80px;
+  margin-bottom: 5px;           /* CANYONEERING SCHEDULE menempel ke H2 */
+  font-size:38px;     /* tetap besar */
+  line-height:1.1;    /* lebih rapat */
+}
+
+
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="section" role="main" aria-labelledby="pageTitle">
+
       <h1 id="pageTitle" class="page-title">Jadwal Open Trip TOS Canyoneering</h1>
 
-      <div class="controls" aria-hidden="false">
-        <label for="monthSelect" style="display:none;">Pilih Bulan</label>
+      <!-- Kontrol -->
+      <div class="controls">
+        <button id="btnExport" style="padding:10px 14px;border-radius:8px;border:none;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.18);">
+          Export Poster (PNG)
+        </button>
+
         <select id="monthSelect" aria-label="Pilih Bulan"></select>
       </div>
 
+      <!-- Loading -->
       <div id="loading">Mengambil data...</div>
 
-      <div class="table-container" aria-live="polite">
-        <div id="jadwal-wrapper">
-  <table id="jadwal-table">
+      <!-- Wrapper tabel -->
+      <div id="jadwal-wrapper" class="table-container" style="margin-top:16px;">
 
+        <!-- TABEL UTAMA (HANYA ADA 1!) -->
         <table id="tripTable" style="display:none;">
           <thead>
             <tr>
-              <th>Tanggal</th>
-              <th>Slot Tersisa</th>
-              <th>Aksi</th>
+              <th style="width:45%">Tanggal</th>
+              <th style="width:25%">Slot Tersisa</th>
+              <th class="hide-on-export" style="width:30%">Aksi</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
-      </div>
+
+      </div> <!-- END WRAPPER -->
+
     </div>
   </div>
 
-  <!-- Modal small form untuk mengisi data pendaftaran -->
+  <!-- Modal Pendaftaran -->
   <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal" role="document">
       <h3 id="modalTitle">Daftar Open Trip</h3>
-      <div id="selectedDateText" style="color:#444; font-size:14px; margin-bottom:6px;"></div>
+      <div id="selectedDateText" style="color:#444;font-size:14px;margin-bottom:6px;"></div>
 
       <label for="inputName">Nama Lengkap</label>
       <input id="inputName" type="text" placeholder="Masukkan nama lengkap" autocomplete="name" required />
@@ -141,6 +320,9 @@
     </div>
   </div>
 
+  <!-- AREA YANG AKAN DIRENDER UNTUK POSTER (HIDDEN) -->
+  <div id="exportPoster" aria-hidden="true"></div>
+
 <script>
 /* CONFIG */
 const apiURL = "https://script.google.com/macros/s/AKfycbwoQKn-H3UjntAj1onCpgsOFN1PPM3b71xAB1iS9ROfDmwKyL9gVg89MX8S8uTj_N3x/exec";
@@ -165,9 +347,10 @@ const inputPhone = document.getElementById("inputPhone");
 const inputNote = document.getElementById("inputNote");
 const btnCancel = document.getElementById("btnCancel");
 const btnSend = document.getElementById("btnSend");
+const btnExport = document.getElementById("btnExport");
+const exportPosterWrapper = document.getElementById("exportPoster");
 
-/* LOAD DATA */
-/* CONFIG CACHE */
+/* LOAD DATA (dengan cache sederhana) */
 const CACHE_KEY = "tripDataCache";
 const CACHE_TIME = 30 * 60 * 1000; // 30 menit
 
@@ -177,7 +360,6 @@ async function loadData() {
     if (cached) {
       const parsed = JSON.parse(cached);
       const now = Date.now();
-
       if (now - parsed.timestamp < CACHE_TIME) {
         sheetsData = parsed.data;
         populateMonthsAndDisplay();
@@ -191,12 +373,7 @@ async function loadData() {
     const json = await res.json();
     sheetsData = json;
 
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ timestamp: Date.now(), data: json })
-    );
-
-
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: json }));
     populateMonthsAndDisplay();
   } catch (err) {
     loadingEl.innerText = "Gagal mengambil data!";
@@ -222,8 +399,7 @@ function populateMonthsAndDisplay() {
   monthSelect.addEventListener("change", e => displayMonth(e.target.value));
 }
 
-
-/* DISPLAY MONTH */
+/* DISPLAY MONTH (tabel) */
 function displayMonth(sheetName){
   tableBody.innerHTML = "";
   const sheet = sheetsData.find(s => s.sheetName === sheetName);
@@ -243,12 +419,10 @@ function displayMonth(sheetName){
       const jumlahFix = row[1];
       const slotTersisa = Math.max(0, MAX_SLOT - jumlahFix);
       const tanggalText = dateObj.toLocaleDateString("id-ID", {
-  weekday:"long", year:"numeric", month:"long", day:"numeric"
-}).replace(/^\w/, c => c.toUpperCase());
-
+        weekday:"long", year:"numeric", month:"long", day:"numeric"
+      }).replace(/^\w/, c => c.toUpperCase());
 
       const tr = document.createElement("tr");
-
       const tdDate = document.createElement("td");
       tdDate.textContent = tanggalText;
 
@@ -267,6 +441,7 @@ function displayMonth(sheetName){
       tdSlot.appendChild(span);
 
       const tdAction = document.createElement("td");
+      tdAction.classList.add("hide-on-export");
       if(isFriday){
         tdAction.textContent = "-";
         tdAction.title = "Operasional libur setiap hari Jumat — pendaftaran ditutup.";
@@ -305,7 +480,7 @@ function displayMonth(sheetName){
   }
 }
 
-
+/* MODAL */
 function openRegistrationModal(tanggalISO, tanggalText){
   currentSelectedDateISO = tanggalISO;
   selectedDateText.textContent = `Tanggal: ${tanggalText}`;
@@ -317,12 +492,10 @@ function openRegistrationModal(tanggalISO, tanggalText){
   modalBackdrop.setAttribute("aria-hidden","false");
   setTimeout(()=> inputName.focus(), 120);
 }
-
 function closeModal(){
   modalBackdrop.classList.remove("show");
   modalBackdrop.setAttribute("aria-hidden","true");
 }
-
 function sendWhatsApp(){
   const name = inputName.value.trim();
   const qty = parseInt(inputQty.value, 10) || 1;
@@ -339,7 +512,6 @@ function sendWhatsApp(){
   const tanggalText = tripDate.toLocaleDateString("id-ID", { year:"numeric", month:"long", day:"numeric" });
   const bulanText = tripDate.toLocaleDateString("id-ID", { month:"long", year:"numeric" });
 
-  // Siapkan pesan WA dan buka jendela baru dulu (langsung dari click -> menghindari popup blocker)
   let message = `Halo TOS Adventure, saya ingin daftar Open Trip Canyoneering tanggal ${tanggalText}.\nNama: ${name}\nJumlah peserta: ${qty}`;
   if(phone) message += `\nNo HP: ${phone}`;
   if(note) message += `\nCatatan: ${note}`;
@@ -350,7 +522,6 @@ function sendWhatsApp(){
   // Buka WA dulu (synchronous, langsung dari event click)
   const newWin = window.open(waUrl, "_blank");
 
-  // Siapkan payload untuk Google Sheets
   const payload = {
     nama: name,
     nohp: phone,
@@ -360,26 +531,16 @@ function sendWhatsApp(){
     catatan: note
   };
 
-  // Kirim ke Google Sheets secara "fire-and-forget" — jangan await supaya tidak memblok popup
   fetch(saveURL, {
     method: "POST",
     body: JSON.stringify(payload)
   }).catch(err => {
-    // Opsional: bisa beri notifikasi kecil atau console.warn
     console.warn("Gagal menyimpan ke spreadsheet:", err);
-    // Jika mau, buka tab error info di window baru yang sama (tidak disarankan)
   });
 
-  // Tutup modal
   closeModal();
-
-  // Jika browser memblokir popup (newWin === null), fallback: navigasi di tab yang sama
-  if (!newWin) {
-    // fallback ke same-tab
-    window.location.href = waUrl;
-  }
+  if (!newWin) window.location.href = waUrl;
 }
-
 
 btnCancel.addEventListener("click", closeModal);
 btnSend.addEventListener("click", sendWhatsApp);
@@ -390,8 +551,146 @@ document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && modalBackdrop.classList.contains("show")) closeModal();
 });
 
+
+/* ---------------------------
+   POSTER RENDER + EXPORT
+   --------------------------- */
+
+function buildPosterHTML(sheetName){
+  const sheet = sheetsData.find(s => s.sheetName === sheetName);
+  if(!sheet) return "<div></div>";
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rows = sheet.data
+    .filter(r => r.length===2 && r[0] && typeof r[1] === "number")
+    .map(r => {
+      const d = new Date(r[0]);
+      return { dateObj: d, jumlahFix: r[1] };
+    })
+    .filter(item => item.dateObj >= today && item.dateObj.getDay() !== 5) // buang Jumat
+    .sort((a,b) => a.dateObj - b.dateObj);
+
+      // bagi data menjadi dua kolom vertikal
+    const half = Math.ceil(rows.length / 2);
+    const left  = rows.slice(0, half);      // urut penuh ke bawah dulu
+    const right = rows.slice(half);         // sisanya lanjut di kolom kanan
+
+
+  function rowToHTML(it){
+    const dateObj = it.dateObj;
+    const jumlahFix = it.jumlahFix;
+    const slotTersisa = Math.max(0, MAX_SLOT - jumlahFix);
+    const dateShort = dateObj.toLocaleDateString("id-ID", { day:"2-digit", month:"long" }).toUpperCase();
+    const longText = dateObj.toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"long" }).replace(/^\w/, c => c.toUpperCase());
+
+    let pillText = "";
+    if(slotTersisa === 0){
+      pillText = "FULL SLOT";
+    } else {
+      pillText = `${slotTersisa} PAX`;
+    }
+
+    return `
+      <div class="item-row" title="${longText}">
+        <div class="item-date">${dateShort}</div>
+        <div class="item-slot"><span class="pill">${pillText}</span></div>
+      </div>
+    `;
+  }
+
+  const poster = `
+    <div class="poster" style="background-image:none;">
+    <img src="logo-tos.png" alt="TOS Adventure" class="poster-logo" />
+
+    <div class="poster-title">
+      <h2>JADWAL</h2>
+      <h3>TOS CANYONEERING</h3>
+       <h4>SLOT TERSEDIA</h4>
+    <br>
+    </div>
+
+      <div class="grid">
+        <div class="col-left">
+          ${left.map(rowToHTML).join("\n")}
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="col-right">
+          ${right.map(rowToHTML).join("\n")}
+        </div>
+      </div>
+
+      <div class="footer">TOS Rafting Pacet - Canyoneering Pacet</div>
+    </div>
+  `;
+  return poster;
+}
+
+/* EXPORT FUNCTION (menggunakan html2canvas) */
+async function exportPoster(){
+  const sheetName = monthSelect.value;
+  if(!sheetName){
+    alert("Pilih bulan terlebih dahulu.");
+    return;
+  }
+
+  document.body.classList.add("exporting");
+  exportPosterWrapper.innerHTML = `<div class="export-area">${buildPosterHTML(sheetName)}</div>`;
+  exportPosterWrapper.style.display = "block";
+
+  const exportArea = exportPosterWrapper.querySelector(".export-area");
+  const posterEl = exportArea.querySelector(".poster");
+
+  try {
+    // pastikan library tersedia
+    if (typeof html2canvas === "undefined") {
+      await loadHtml2Canvas();
+    }
+
+    // render dengan scale 2 untuk kualitas lebih tajam
+    const canvas = await html2canvas(posterEl, {
+      backgroundColor: null,
+      useCORS: true,
+      scale: 2,
+      logging: false,
+      windowWidth: posterEl.scrollWidth,
+      windowHeight: posterEl.scrollHeight
+    });
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = `Poster-${sheetName}.png`;
+    link.href = dataUrl;
+    link.click();
+  } catch (err) {
+    console.error("Gagal export poster:", err);
+    alert("Gagal export poster. Silakan coba lagi.");
+  } finally {
+    exportPosterWrapper.style.display = "none";
+    exportPosterWrapper.innerHTML = "";
+    document.body.classList.remove("exporting");
+  }
+}
+
+/* helper: dynamic load html2canvas jika belum ada */
+function loadHtml2Canvas(){
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas) return resolve();
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+    s.onload = () => resolve();
+    s.onerror = (e) => reject(e);
+    document.head.appendChild(s);
+  });
+}
+
+/* hook tombol export */
+btnExport.addEventListener("click", exportPoster);
+
 /* INIT */
 loadData();
 </script>
 </body>
 </html>
+
